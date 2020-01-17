@@ -1,7 +1,21 @@
+# file: bassberrypi.py
+# Conn O Muineachain
+# HDIP in Computer Science, Semester 2
+# Computer Systems
+# Assignment 2
+# 16/01/2019
 
-# from https://stackoverflow.com/questions/22101023/how-to-handle-in-data-in-pyaudio-callback-mode
-# and pianoputer
-# and https://bastibe.de/2012-11-02-real-time-signal-processing-in-python.html
+# The programme is a failed attempt to realise a working real-time octave shifter in python.
+# I've included it to show my work. Run it if you like - it's not pretty :/ 
+# Please see the other file amplifier.py for a reasonably working programme, including IOT features
+
+# designed to take in a live audio stream, shift it down an octave
+# and output the octave-shifted output in real-time.
+# I discovered that this task is beyond the abilities of an interpreted language.
+# This programme does achieve bass-shifting audio using a 'dirty hack', but the quality
+# is apalling. There is no IOT ability in this programme, because I abondoned the task
+# and wrote another programme (amplifier.py) to do the simpler task of amplifying the 
+# magnitude of the real-time signal. amplifier.py DOES have IOT features
 
 import pyaudio
 import time
@@ -15,9 +29,7 @@ p = pyaudio.PyAudio()
 
 # data conversion functions
 def stream2numpy(stream):
-    #print(stream)
     numpyarray = np.fromstring(stream,dtype=np.int16)
-    #print(numpyarray)
     return numpyarray
 
 def numpy2stream(numpyarray):
@@ -25,39 +37,25 @@ def numpy2stream(numpyarray):
     return stream
 
 
-def octaveshift(in_data): # 
-    
-    #print("in_data", in_data)
-    # resample in_data
+def octaveshift(in_data): # this is a dirty hack - and it sounds nasty :) 
+	# resample in_data
     resampled = signal.resample(in_data,2*CHUNK)
-
-    # now convert resampled to list and throw away the extra samples
-    #new_data = resampled.tolist()
-
-    #data2 = new_data[0:CHUNK]
-
-    # now convert data2 list back to numpy array
-    #out1_data = np.asarray(data2, dtype=np.int16)
-    #print("out_data", out_data)
+    # our new signal has twice the number of samples
+    # we throw away the second half of the set and return the same amount of samples - but slower
     out_data = resampled[0:CHUNK].astype(int)
-    #print("out_data", out_data)
-
-
     return out_data
 
 
 def callback(in_data, frame_count, time_info, flag):
 
-    #print("in_data", in_data)
+    # convert from pyaudio stream to numpy array
     numpy_data = stream2numpy(in_data)
-    #print("numpy_data", numpy_data)
 
     # shift it
     numpy_data2 = octaveshift(numpy_data)
-    #print("numpy_data", numpy_data)
     
+    # convert from numpy array back to pyaudio stream
     out_data = numpy2stream(numpy_data2)
-    #print("out_data", numpy_data)
 
     return (out_data, pyaudio.paContinue)
 
@@ -73,7 +71,6 @@ stream = p.open(format=pyaudio.paInt16,
 stream.start_stream()
 
 while stream.is_active():
-#zs    print("stream is active")
     time.sleep(0.1)
 
 print("stream stopped")
